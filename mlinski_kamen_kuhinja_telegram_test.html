@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="hr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Mlinski Kamen - Kuhinja zove</title>
+  <style>
+    :root {
+      --bg: #111;
+      --card: #1c1c1c;
+      --button: #2d2d2d;
+      --button-active: #3b6b3b;
+      --text: #fff;
+      --muted: #aaa;
+      --danger: #7a2222;
+      --border: #333;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 16px;
+    }
+    .wrap { max-width: 800px; margin: 0 auto; }
+    h1 {
+      margin: 4px 0 2px;
+      text-align: center;
+      font-size: 30px;
+      letter-spacing: .5px;
+    }
+    .sub {
+      text-align: center;
+      color: var(--muted);
+      margin-bottom: 18px;
+      font-size: 15px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    button.call {
+      height: 105px;
+      border: 2px solid var(--border);
+      border-radius: 18px;
+      background: var(--button);
+      color: var(--text);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: .6px;
+      box-shadow: 0 8px 18px rgba(0,0,0,.25);
+      touch-action: manipulation;
+    }
+    button.call:active {
+      background: var(--button-active);
+      transform: scale(.98);
+    }
+    .all {
+      grid-column: 1 / -1;
+      background: var(--danger) !important;
+      height: 92px !important;
+    }
+    .status {
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      min-height: 52px;
+      font-size: 17px;
+      text-align: center;
+    }
+    .log {
+      margin-top: 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      max-height: 210px;
+      overflow: auto;
+      font-size: 14px;
+      color: #ddd;
+    }
+    .log-title {
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+    }
+    .config {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 14px;
+      background: #181818;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    @media (max-width: 520px) {
+      body { padding: 12px; }
+      h1 { font-size: 24px; }
+      .grid { gap: 10px; }
+      button.call { height: 88px; font-size: 22px; border-radius: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>MLINSKI KAMEN</h1>
+    <div class="sub">KUHINJA ZOVE KONOBARA</div>
+
+    <div class="grid" id="buttons"></div>
+
+    <div class="status" id="status">Spremno.</div>
+
+    <div class="log">
+      <div class="log-title">Zadnji pozivi na ovom uređaju</div>
+      <div id="log"></div>
+    </div>
+
+    <div class="config">
+      <b>VAŽNO:</b> Ovo je test verzija. Bot token je u ovoj datoteci, zato ju ne dijeli javno.
+      Za pravi restoran kasnije napraviti backend/webhook da token ne bude vidljiv.
+    </div>
+  </div>
+
+<script>
+  // 1) OVDJE ZALIJEPI NOVI BOT TOKEN IZ BotFathera
+  const BOT_TOKEN = "8662759047:AAEBdy243McfD5_QvOleTX6jlLScG0-AfpM";
+
+  // 2) OVDJE UPIŠI TELEGRAM ID-eve
+  const recipients = {
+    "SOGORICA": "8616964535",
+    "ALAN": "8616964535",
+    "ANDREJ": "8616964535",
+    "IGOR": "8616964535",
+    "KRISTINA": "8616964535",
+    "RINA": "8616964535",
+    "JOSIPA": "8616964535",
+    "REZERVA": "8616964535"
+  };
+
+  const allRecipients = ["SOGORICA", "ALAN", "ANDREJ", "IGOR", "KRISTINA", "RINA", "JOSIPA", "REZERVA"];
+
+  const buttonsEl = document.getElementById("buttons");
+  const statusEl = document.getElementById("status");
+  const logEl = document.getElementById("log");
+
+  function nowTime() {
+    return new Date().toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  }
+
+  function addLog(text) {
+    const line = document.createElement("div");
+    line.textContent = `${nowTime()}  ${text}`;
+    logEl.prepend(line);
+  }
+
+  async function sendTelegram(chatId, text) {
+    const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: text,
+        disable_notification: false
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(err);
+    }
+    return res.json();
+  }
+
+  async function callWaiter(name) {
+    if (!BOT_TOKEN || BOT_TOKEN === "OVDJE_ZALIJEPI_BOT_TOKEN") {
+      statusEl.textContent = "Nisi upisao BOT TOKEN u datoteku.";
+      return;
+    }
+
+    const chatId = recipients[name];
+    if (!chatId) {
+      statusEl.textContent = `Nema Telegram ID za: ${name}`;
+      return;
+    }
+
+    statusEl.textContent = `Šaljem: ${name}...`;
+
+    try {
+      await sendTelegram(chatId, "KUHINJA");
+      statusEl.textContent = `Poslano: ${name}`;
+      addLog(`KUHINJA → ${name}`);
+    } catch (e) {
+      statusEl.textContent = `Greška za ${name}. Provjeri token/ID/start bota.`;
+      addLog(`GREŠKA → ${name}`);
+      console.error(e);
+    }
+  }
+
+  async function callAll() {
+    statusEl.textContent = "Šaljem svima...";
+    let ok = 0;
+    for (const name of allRecipients) {
+      try {
+        await sendTelegram(recipients[name], "KUHINJA");
+        ok++;
+      } catch (e) {
+        console.error(name, e);
+      }
+    }
+    statusEl.textContent = `Poslano svima: ${ok}/${allRecipients.length}`;
+    addLog(`KUHINJA → SVI KONOBARI`);
+  }
+
+  for (const name of Object.keys(recipients)) {
+    const btn = document.createElement("button");
+    btn.className = "call";
+    btn.textContent = name;
+    btn.onclick = () => callWaiter(name);
+    buttonsEl.appendChild(btn);
+  }
+
+  const allBtn = document.createElement("button");
+  allBtn.className = "call all";
+  allBtn.textContent = "SVI KONOBARI";
+  allBtn.onclick = callAll;
+  buttonsEl.appendChild(allBtn);
+</script>
+</body>
+</html>
