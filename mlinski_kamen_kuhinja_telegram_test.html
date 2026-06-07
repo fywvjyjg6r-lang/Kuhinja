@@ -188,6 +188,9 @@
     const oldText = buttonEl.textContent;
   buttonEl.textContent = "ŠALJEM...";
   buttonEl.style.background = "#6b5b22";
+    if (navigator.vibrate) {
+  navigator.vibrate(120);
+}
 
     const chatId = recipients[name];
     if (!chatId) {
