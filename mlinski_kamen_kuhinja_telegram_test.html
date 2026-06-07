@@ -180,11 +180,14 @@
     return res.json();
   }
 
-  async function callWaiter(name) {
+  async function callWaiter(name, buttonEl) {
     if (!BOT_TOKEN || BOT_TOKEN === "OVDJE_ZALIJEPI_BOT_TOKEN") {
       statusEl.textContent = "Nisi upisao BOT TOKEN u datoteku.";
       return;
     }
+    const oldText = buttonEl.textContent;
+  buttonEl.textContent = "ŠALJEM...";
+  buttonEl.style.background = "#6b5b22";
 
     const chatId = recipients[name];
     if (!chatId) {
@@ -196,6 +199,13 @@
 
     try {
       await sendTelegram(chatId, "KUHINJA");
+      buttonEl.textContent = "POSLANO ✓";
+buttonEl.style.background = "#2f7d32";
+
+setTimeout(() => {
+  buttonEl.textContent = oldText;
+  buttonEl.style.background = "";
+}, 1200);
       statusEl.textContent = `Poslano: ${name}`;
       addLog(`KUHINJA → ${name}`);
     } catch (e) {
@@ -224,7 +234,7 @@
     const btn = document.createElement("button");
     btn.className = "call";
     btn.textContent = name;
-    btn.onclick = () => callWaiter(name);
+    btn.onclick = () => callWaiter(name, btn);
     buttonsEl.appendChild(btn);
   }
 
