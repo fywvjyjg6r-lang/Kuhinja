@@ -219,19 +219,44 @@ setTimeout(() => {
   }
 
   async function callAll() {
-    statusEl.textContent = "Šaljem svima...";
-    let ok = 0;
-    for (const name of allRecipients) {
-      try {
-        await sendTelegram(recipients[name], "KUHINJA");
-        ok++;
-      } catch (e) {
-        console.error(name, e);
-      }
+
+  const blok = prompt("Upiši blok:");
+
+  if (!blok) return;
+
+  const poruka = "🚨 BLOK " + blok.toUpperCase();
+
+  statusEl.textContent = "Šaljem blok svima...";
+
+  let ok = 0;
+
+  for (const name of allRecipients) {
+
+    try {
+
+      await sendTelegram(recipients[name], poruka);
+
+      setTimeout(() => {
+        sendTelegram(recipients[name], poruka);
+      }, 4500);
+
+      setTimeout(() => {
+        sendTelegram(recipients[name], poruka);
+      }, 9000);
+
+      ok++;
+
+    } catch (e) {
+      console.error(name, e);
     }
-    statusEl.textContent = `Poslano svima: ${ok}/${allRecipients.length}`;
-    addLog(`KUHINJA → SVI KONOBARI`);
+
   }
+
+  statusEl.textContent = `Poslano svima: ${ok}/${allRecipients.length}`;
+
+  addLog(`BLOK → ${blok.toUpperCase()}`);
+
+}
 
   for (const name of Object.keys(recipients)) {
     const btn = document.createElement("button");
